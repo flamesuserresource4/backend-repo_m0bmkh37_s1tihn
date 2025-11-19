@@ -1,26 +1,35 @@
 """
 Database Schemas
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Pydantic models that define collections used by the app.
+Each class name lowercased becomes its collection name.
 """
-
+from typing import Optional, Literal, Any, Dict
 from pydantic import BaseModel, Field
-from typing import Optional
 
-# Example schemas (replace with your own):
+class ExtractionJob(BaseModel):
+    """
+    Stores a log of a document extraction/analysis job
+    Collection name: "extractionjob" (lowercase of class)
+    """
+    job_type: Literal[
+        "bank_statement",
+        "invoice",
+        "receipt",
+        "salary_slip",
+        "credit_card",
+        "table_extract",
+        "summarize",
+        "translate",
+        "chat",
+    ] = Field(..., description="Type of job executed")
+    filename: str = Field(..., description="Original uploaded filename")
+    size_bytes: Optional[int] = Field(None, description="File size in bytes")
+    status: Literal["success", "error"] = Field(..., description="Job status")
+    result_summary: Optional[str] = Field(None, description="Short human summary of result")
+    meta: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata for the job")
 
 class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
     name: str = Field(..., description="Full name")
     email: str = Field(..., description="Email address")
     address: str = Field(..., description="Address")
@@ -28,21 +37,8 @@ class User(BaseModel):
     is_active: bool = Field(True, description="Whether user is active")
 
 class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
     title: str = Field(..., description="Product title")
     description: Optional[str] = Field(None, description="Product description")
     price: float = Field(..., ge=0, description="Price in dollars")
     category: str = Field(..., description="Product category")
     in_stock: bool = Field(True, description="Whether product is in stock")
-
-# Add your own schemas here:
-# --------------------------------------------------
-
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
